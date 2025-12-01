@@ -4,20 +4,6 @@ const SERVER_HOST = "127.0.0.1";
 const SERVER_PORT = 7777;
 const WS_PORT = 8080;
 
-// Human-readable buffer debug utilities
-function hex(buf) {
-    return Array.from(buf, b => b.toString(16).padStart(2, "0")).join(" ");
-}
-function ascii(buf) {
-    return Array.from(buf, b => (b >= 32 && b <= 126 ? String.fromCharCode(b) : ".")).join("");
-}
-function debugBuffer(label, buf) {
-    console.log(`\n==== ${label} (${buf.length} bytes) ====`);
-    console.log("HEX:   ", hex(buf));
-    console.log("ASCII: ", ascii(buf));
-    console.log("RAW:   ", buf);
-}
-
 function createUdpBridge() {
     let ws = null;
 

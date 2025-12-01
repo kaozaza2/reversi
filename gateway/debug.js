@@ -1,17 +1,8 @@
 import {ErrorCode, MessageType} from "../client/src/net/protocol.js";
 
-// Lookup reverse message type name
 const MessageTypeName = Object.fromEntries(
     Object.entries(MessageType).map(([k, v]) => [v, k])
 );
-
-function hex(buf) {
-    return Array.from(buf, b => b.toString(16).padStart(2, "0")).join(" ");
-}
-
-function ascii(buf) {
-    return Array.from(buf, b => (b >= 32 && b <= 126 ? String.fromCharCode(b) : ".")).join("");
-}
 
 export function decodePacket(buf) {
     if (!buf || buf.length === 0) {
@@ -172,7 +163,5 @@ export function decodePacket(buf) {
         }
     }
 
-    console.log("HEX:", hex(buf));
-    console.log("ASCII:", ascii(buf));
     console.log("============================================\n");
 }
