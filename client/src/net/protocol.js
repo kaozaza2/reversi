@@ -24,6 +24,7 @@ export const MessageType = {
 export const GameMode = {
     PLAYER_VS_PLAYER: 0,
     PLAYER_VS_CPU: 1,
+    PLAYER_VS_AI: 2,
 }
 
 export const GameState = {

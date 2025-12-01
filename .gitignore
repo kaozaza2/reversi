@@ -1,4 +1,5 @@
 .idea
+server/reversi_q_table.pkl
 gateway/node_modules
 
 client/node_modules

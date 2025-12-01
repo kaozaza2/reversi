@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
+import pickle
 import random
 import socket
 import struct
 import threading
 import time
+import os
 from collections import deque
 from concurrent.futures import ThreadPoolExecutor
 
@@ -19,6 +21,7 @@ CPU_THINK_DELAY_MS = (250, 700)
 ENABLE_VERBOSE_LOG = True
 MAX_CHAT_HISTORY = 50
 MAX_CHAT_MESSAGE_LENGTH = 60000
+REVERSI_AI_Q_TABLE = None
 
 
 ###############################################################################
@@ -76,6 +79,7 @@ class MessageType:
 class GameMode:
     PLAYER_VS_PLAYER = 0
     PLAYER_VS_CPU = 1
+    PLAYER_VS_AI = 2
 
 
 class GameStatus:
@@ -179,6 +183,47 @@ def count_pieces(board):
 
 def clone_board(board):
     return [row[:] for row in board]
+
+
+def ai_state_key(board):
+    key = ""
+    for row in board:
+        for column in row:
+            if column == 0:
+                key += "B"
+            elif column == 1:
+                key += "W"
+            else:
+                key += " "
+    return "B" + key
+
+
+def ai_select_move(board, ai_player):
+    if not REVERSI_AI_Q_TABLE:
+        print("AI not available, fallback to CPU")
+        return cpu_select_move(board, ai_player)
+
+    moves = find_legal_moves(board, ai_player)
+    if not moves:
+        return None
+
+    s = ai_state_key(board)
+    if s not in REVERSI_AI_Q_TABLE:
+        return random.choice(moves)
+
+    best_value = None
+    best_moves = []
+
+    for (x, y) in moves:
+        idx = x * 8 * y
+        v = REVERSI_AI_Q_TABLE[idx]
+        if best_value is None or v > best_value:
+            best_value = v
+            best_moves = [(x, y)]
+        elif v == best_value:
+            best_moves.append((x, y))
+
+    return random.choice(best_moves)
 
 
 def cpu_select_move(board, cpu_player):
@@ -420,8 +465,8 @@ class ReversiUDPServer:
             if not lb or lb.started:
                 return
 
-            if lb.mode == GameMode.PLAYER_VS_CPU and len(lb.players) == 1:
-                lb.players.append("CPU")
+            if lb.mode in (GameMode.PLAYER_VS_CPU, GameMode.PLAYER_VS_AI) and len(lb.players) == 1:
+                lb.players.append("AI" if lb.mode == GameMode.PLAYER_VS_AI else "CPU")
                 lb.player_addresses.append(None)
 
             if len(lb.players) == 2:
@@ -611,19 +656,24 @@ class ReversiUDPServer:
                         lb.started
                         and lb.status == GameStatus.PLAYING
                         and lb.turn_index < len(lb.players)
-                        and lb.players[lb.turn_index] == "CPU"
+                        and lb.players[lb.turn_index] in ("CPU", "AI")
                 ):
                     if not hasattr(lb, "_cpu_action_due"):
                         d = random.randint(*CPU_THINK_DELAY_MS) / 1000
                         lb._cpu_action_due = ts + d
                     elif ts >= lb._cpu_action_due:
-                        mv = cpu_select_move(lb.board, lb.turn_index)
+                        cpu_name = lb.players[lb.turn_index]
+                        if cpu_name == "AI":
+                            mv = ai_select_move(lb.board, lb.turn_index)
+                        else:
+                            mv = cpu_select_move(lb.board, lb.turn_index)
+
                         if mv:
                             x, y = mv
                             apply_player_move(lb.board, lb.turn_index, x, y)
-                            log_message(f"CPU (player {lb.turn_index}) moved to ({x}, {y})")
+                            log_message(f"{cpu_name} (player {lb.turn_index}) moved to ({x}, {y})")
                         else:
-                            log_message(f"CPU has no moves")
+                            log_message(f"{cpu_name} has no moves")
 
                         # Switch turn
                         lb.turn_index = 1 - lb.turn_index
@@ -674,4 +724,8 @@ class ReversiUDPServer:
 # MAIN
 ###############################################################################
 if __name__ == "__main__":
+    if os.path.exists("reversi_q_table.pkl"):
+        with open("reversi_q_table.pkl", "rb") as f:
+            REVERSI_AI_Q_TABLE = pickle.load(f)
+
     ReversiUDPServer().start()

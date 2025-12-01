@@ -381,7 +381,7 @@ const ReversiGame = () => {
                             <span className="text-gray-600">Welcome, {playerName}!</span>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-3 gap-4">
                             <button onClick={() => createLobby(GameMode.PLAYER_VS_PLAYER)}
                                     className="bg-teal-600 text-white py-4 rounded-lg font-semibold hover:bg-teal-700 transition flex items-center justify-center gap-2">
                                 <Users size={20}/>Player vs Player
@@ -389,6 +389,10 @@ const ReversiGame = () => {
                             <button onClick={() => createLobby(GameMode.PLAYER_VS_CPU)}
                                     className="bg-cyan-600 text-white py-4 rounded-lg font-semibold hover:bg-cyan-700 transition flex items-center justify-center gap-2">
                                 <Play size={20}/>Player vs CPU
+                            </button>
+                            <button onClick={() => createLobby(GameMode.PLAYER_VS_AI)}
+                                    className="bg-cyan-600 text-white py-4 rounded-lg font-semibold hover:bg-cyan-700 transition flex items-center justify-center gap-2">
+                                <Play size={20}/>Player vs AI
                             </button>
                         </div>
                     </div>
