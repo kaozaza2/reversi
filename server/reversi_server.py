@@ -195,7 +195,7 @@ def ai_state_key(board):
                 key += "W"
             else:
                 key += " "
-    return "B" + key
+    return "W" + key
 
 
 def ai_select_move(board, ai_player):
